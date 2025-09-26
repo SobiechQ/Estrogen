@@ -12,9 +12,10 @@ import ovh.sobiech.Service.RetentionService;
 public class ScheduledTasks {
     private final RetentionService retentionService;
 
-    @Scheduled(cron = "* * * 1 * *")
-    public void now() {
+    @Scheduled(cron = "0 0 0 1 * *")
+    public void retentionServiceMonthly() {
         log.info("Scheduled task started");
-        retentionService.clear();
+        retentionService.resetChat();
+        retentionService.giveRoles();
     }
 }

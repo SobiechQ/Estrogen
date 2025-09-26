@@ -2,11 +2,9 @@ package ovh.sobiech.Listener;
 
 import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.message.MessageCreateEvent;
-import discord4j.core.object.entity.User;
-import lombok.AllArgsConstructor;
+import discord4j.core.retriever.EntityRetriever;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ovh.sobiech.Configuration.DiscordConfiguration;
 import ovh.sobiech.Service.RetentionService;
 import reactor.core.publisher.Mono;
 
@@ -14,8 +12,8 @@ import reactor.core.publisher.Mono;
 @Service
 public class MessageCreateListener extends MessageListener  {
 
-    public MessageCreateListener(RetentionService retentionService, GatewayDiscordClient client) {
-        super(retentionService, client);
+    public MessageCreateListener(RetentionService retentionService, GatewayDiscordClient client, EntityRetriever retriever) {
+        super(retentionService, client, retriever);
     }
 
     @Override
@@ -25,14 +23,6 @@ public class MessageCreateListener extends MessageListener  {
 
     @Override
     public Mono<Void> execute(MessageCreateEvent event) {
-        log.info("Handling event from user: {}", event.getMessage().getAuthor().map(User::getUsername).orElse("Unknown"));
-
-        return Mono.defer(() -> {
-            log.info("Starting command processing");
-            return this.processCommand(event.getMessage())
-                    .doOnSuccess(v -> log.info("Command processing completed successfully"))
-                    .doOnError(e -> log.error("Command processing failed", e))
-                    .doOnTerminate(() -> log.info("Command processing terminated"));
-        });
+        return Mono.defer(() -> this.processCommand(event.getMessage()));
     }
 }

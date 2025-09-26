@@ -1,10 +1,13 @@
 package ovh.sobiech.Configuration;
 
+import discord4j.core.DiscordClient;
 import discord4j.core.DiscordClientBuilder;
 import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.Event;
 import discord4j.core.retriever.EntityRetriever;
 import discord4j.core.retriever.StoreEntityRetriever;
+import discord4j.gateway.intent.Intent;
+import discord4j.gateway.intent.IntentSet;
 import lombok.extern.slf4j.Slf4j;
 import org.reactivestreams.Subscription;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,11 +30,15 @@ public class DiscordConfiguration {
             log.warn("Discord token is not set");
             throw new IllegalStateException("Discord token is not set");
         }
-        return DiscordClientBuilder.create(token)
-                .build()
+        return DiscordClient.create(token)
+                .gateway()
+                .setEnabledIntents(IntentSet.of(
+                        Intent.GUILDS,
+                        Intent.GUILD_MESSAGES,
+                        Intent.GUILD_MEMBERS
+                ))
                 .login()
-                .blockOptional()
-                .orElseThrow();
+                .block();
     }
 
     @Bean

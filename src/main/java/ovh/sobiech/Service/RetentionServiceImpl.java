@@ -1,13 +1,14 @@
 package ovh.sobiech.Service;
 
 import discord4j.core.object.entity.Guild;
+import discord4j.core.object.entity.Member;
+import discord4j.core.object.entity.Role;
 import discord4j.core.object.entity.channel.CategorizableChannel;
 import discord4j.core.object.entity.channel.Category;
 import discord4j.core.object.entity.channel.Channel;
 import discord4j.core.object.entity.channel.TextChannel;
 import discord4j.core.retriever.EntityRetriever;
 import discord4j.core.spec.TextChannelCreateSpec;
-import discord4j.core.spec.TextChannelEditSpec;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,14 +22,41 @@ import java.util.Calendar;
 public class RetentionServiceImpl implements RetentionService {
     private final static String RETENTION_CHANNEL_NAME = "poważne-gadanko-czat";
     private final static String CATEGORY_NAME = "Poważne Gadanko";
+    private final static String VERIFIED_ROLE_NAME = "Zweryfitku :3c";
+    private final static String RETENTION_CHANNEL_ROLE_NAME = "Poważne gadanko";
     private final EntityRetriever retriever;
 
     @Override
-    public void clear() {
+    public void resetChat() {
         getRetentionChannel(retriever)
                 .flatMap(Channel::delete)
                 .then(createChannel(retriever))
                 .subscribe();
+    }
+
+    public void giveRoles() {
+        getGuild(retriever)
+                .flatMapMany(Guild::getMembers)
+                .filter(m -> !m.isBot())
+                .filterWhen(RetentionServiceImpl::isVerified)
+                .flatMap(m -> addRetentionChannelRole(retriever, m))
+                .subscribe();
+    }
+
+    private static Mono<Void> addRetentionChannelRole(EntityRetriever retriever, Member member) {
+        return getRetentionChannelRole(retriever)
+                .flatMap(role -> member.addRole(role.getId()));
+    }
+
+    private static Mono<Role> getRetentionChannelRole(EntityRetriever retriever) {
+        return getGuild(retriever)
+                .flatMapMany(Guild::getRoles)
+                .filter(r -> r.getName().contains(RETENTION_CHANNEL_ROLE_NAME))
+                .next();
+    }
+
+    private static Mono<Boolean> isVerified(Member member) {
+        return member.getRoles().any(r -> r.getName().contains(VERIFIED_ROLE_NAME));
     }
 
     private static Mono<Guild> getGuild(EntityRetriever retriever) {
@@ -74,6 +102,4 @@ public class RetentionServiceImpl implements RetentionService {
                 .filter(c -> c.getName().contains(CATEGORY_NAME))
                 .next();
     }
-
-
 }
