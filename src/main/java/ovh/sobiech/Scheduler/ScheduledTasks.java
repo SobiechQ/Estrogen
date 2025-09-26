@@ -12,9 +12,9 @@ import ovh.sobiech.Service.RetentionService;
 public class ScheduledTasks {
     private final RetentionService retentionService;
 
-    @Scheduled(cron = "0 * * * * *")
+    @Scheduled(cron = "* * * 1 * *")
     public void now() {
         log.info("Scheduled task started");
-        retentionService.clearAndNotify();
+        retentionService.clear();
     }
 }

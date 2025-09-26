@@ -1,13 +1,19 @@
 package ovh.sobiech.Listener;
 
+import discord4j.core.GatewayDiscordClient;
+import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.Message;
-import lombok.AllArgsConstructor;
+import ovh.sobiech.Configuration.DiscordConfiguration;
 import ovh.sobiech.Service.RetentionService;
 import reactor.core.publisher.Mono;
 
-@AllArgsConstructor
-public abstract class MessageListener {
+public abstract class MessageListener implements EventListener<MessageCreateEvent> {
     private final RetentionService retentionService;
+
+    public MessageListener(RetentionService retentionService, GatewayDiscordClient client) {
+        this.retentionService = retentionService;
+        DiscordConfiguration.subscribe(client, this);
+    }
 
     public Mono<Void> processCommand(Message eventMessage) {
         return switch (eventMessage.getContent().toLowerCase()){
@@ -20,7 +26,8 @@ public abstract class MessageListener {
     public Mono<Void> processClear(Message message) {
         return Mono.just(message)
                 .filter(m -> m.getAuthor().map(u -> !u.isBot()).orElse(false))
-                .doOnNext(m -> retentionService.clearAndNotify())
+                .doOnNext(m -> retentionService.clear())
+                .log()
                 .then();
     }
 
@@ -28,7 +35,8 @@ public abstract class MessageListener {
         return Mono.just(message)
                 .filter(m -> m.getAuthor().map(u -> !u.isBot()).orElse(false))
                 .flatMap(Message::getChannel)
-                .flatMap(c -> c.createMessage("meowr :3c"))
+                .flatMapMany(c -> c.createMessage("meowr :3c").repeat(10))
+                .log()
                 .then();
     }
 }

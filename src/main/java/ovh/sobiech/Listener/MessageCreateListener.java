@@ -1,20 +1,21 @@
 package ovh.sobiech.Listener;
 
+import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.User;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ovh.sobiech.Configuration.DiscordConfiguration;
 import ovh.sobiech.Service.RetentionService;
 import reactor.core.publisher.Mono;
 
 @Slf4j
 @Service
-public class MessageCreateListener extends MessageListener implements EventListener<MessageCreateEvent> {
+public class MessageCreateListener extends MessageListener  {
 
-
-    public MessageCreateListener(RetentionService retentionService) {
-        super(retentionService);
+    public MessageCreateListener(RetentionService retentionService, GatewayDiscordClient client) {
+        super(retentionService, client);
     }
 
     @Override
